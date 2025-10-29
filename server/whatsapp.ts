@@ -5,7 +5,7 @@ import type { Server as HTTPServer } from "http";
 import { Server as SocketIOServer } from "socket.io";
 import { storage } from "./storage";
 
-let whatsappClient: typeof Client | null = null;
+let whatsappClient: InstanceType<typeof Client> | null = null;
 let io: SocketIOServer | null = null;
 
 export function initializeWhatsApp(httpServer: HTTPServer) {
