@@ -206,5 +206,32 @@ export class SqlServerStorage implements IStorage {
   }
 }
 
-const useSqlServer = process.env.DB_HOST && process.env.DB_NAME;
-export const storage: IStorage = useSqlServer ? new SqlServerStorage() : new MemStorage();
+async function initializeStorage(): Promise<IStorage> {
+  const shouldUseSqlServer = process.env.DB_HOST && process.env.DB_NAME;
+  
+  if (shouldUseSqlServer) {
+    try {
+      const testStorage = new SqlServerStorage();
+      await testStorage.getAllAuthorizedNumbers();
+      console.log('✓ Usando SQL Server para armazenamento');
+      return testStorage;
+    } catch (error) {
+      console.log('⚠ SQL Server não disponível, usando armazenamento em memória');
+      return new MemStorage();
+    }
+  }
+  
+  console.log('✓ Usando armazenamento em memória');
+  return new MemStorage();
+}
+
+let storageInstance: IStorage | null = null;
+
+export async function getStorage(): Promise<IStorage> {
+  if (!storageInstance) {
+    storageInstance = await initializeStorage();
+  }
+  return storageInstance;
+}
+
+export const storage = new MemStorage();

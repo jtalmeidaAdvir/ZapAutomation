@@ -2,18 +2,22 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useWhatsApp } from "@/hooks/useWhatsApp";
+import { useAuth } from "@/lib/auth";
 import QRCodeDisplay from "@/components/QRCodeDisplay";
 import ConnectionStatus from "@/components/ConnectionStatus";
 import AuthorizedNumbers from "@/components/AuthorizedNumbers";
 import MessageLog from "@/components/MessageLog";
 import AddNumberModal from "@/components/AddNumberModal";
 import ThemeToggle from "@/components/ThemeToggle";
+import { Button } from "@/components/ui/button";
+import { LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { AuthorizedNumber as AuthorizedNumberType, Message as MessageType } from "@shared/schema";
 
 export default function Dashboard() {
   const [showModal, setShowModal] = useState(false);
   const { toast } = useToast();
+  const { logout, user } = useAuth();
   const { isConnected, qrCode, loading, initialize, socket } = useWhatsApp();
 
   const { data: authorizedNumbers = [], isLoading: loadingNumbers } = useQuery<AuthorizedNumberType[]>({
@@ -132,7 +136,21 @@ export default function Dashboard() {
                 <span className="material-icons text-2xl text-primary">chat</span>
                 <h1 className="text-xl font-semibold">WhatsApp Automação</h1>
               </div>
-              <ThemeToggle />
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-muted-foreground" data-testid="text-username">
+                  {user?.username}
+                </span>
+                <ThemeToggle />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={logout}
+                  data-testid="button-logout"
+                  title="Sair"
+                >
+                  <LogOut className="h-5 w-5" />
+                </Button>
+              </div>
             </div>
           </div>
         </header>
@@ -154,7 +172,21 @@ export default function Dashboard() {
               <span className="material-icons text-2xl text-primary">chat</span>
               <h1 className="text-xl font-semibold">WhatsApp Automação</h1>
             </div>
-            <ThemeToggle />
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-muted-foreground" data-testid="text-username">
+                {user?.username}
+              </span>
+              <ThemeToggle />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={logout}
+                data-testid="button-logout"
+                title="Sair"
+              >
+                <LogOut className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
         </div>
       </header>

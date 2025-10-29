@@ -15,22 +15,35 @@ const config: sql.config = {
     min: 0,
     idleTimeoutMillis: 30000,
   },
+  connectionTimeout: 5000,
+  requestTimeout: 5000,
 };
 
 let pool: sql.ConnectionPool | null = null;
+let connectionFailed = false;
 
 export async function getPool(): Promise<sql.ConnectionPool> {
+  if (connectionFailed) {
+    throw new Error('SQL Server connection previously failed');
+  }
+  
   if (!pool) {
-    pool = await sql.connect(config);
-    console.log('Conectado ao SQL Server');
-    await initializeTables();
+    try {
+      pool = await sql.connect(config);
+      console.log('✓ Conectado ao SQL Server com sucesso');
+      await initializeTables();
+    } catch (error) {
+      connectionFailed = true;
+      console.error('✗ Falha ao conectar ao SQL Server - usando armazenamento em memória');
+      throw error;
+    }
   }
   return pool;
 }
 
 async function initializeTables() {
   try {
-    const pool = await getPool();
+    if (!pool) throw new Error('Pool não inicializado');
 
     await pool.request().query(`
       IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='users' AND xtype='U')
@@ -62,11 +75,15 @@ async function initializeTables() {
       )
     `);
 
-    console.log('Tabelas verificadas/criadas com sucesso');
+    console.log('✓ Tabelas SQL Server verificadas/criadas com sucesso');
   } catch (error) {
-    console.error('Erro ao criar tabelas:', error);
+    console.error('✗ Erro ao criar tabelas:', error);
     throw error;
   }
+}
+
+export function isSqlServerAvailable(): boolean {
+  return !connectionFailed && pool !== null;
 }
 
 export { sql };

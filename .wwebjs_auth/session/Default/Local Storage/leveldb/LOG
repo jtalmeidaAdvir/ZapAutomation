@@ -1,3 +1,6 @@
-2025/10/29-18:10:27.913 c2e Reusing MANIFEST /home/runner/workspace/.wwebjs_auth/session/Default/Local Storage/leveldb/MANIFEST-000001
-2025/10/29-18:10:27.915 c2e Recovering log #3
-2025/10/29-18:10:27.916 c2e Reusing old log /home/runner/workspace/.wwebjs_auth/session/Default/Local Storage/leveldb/000003.log 
+2025/10/29-20:24:53.461 6da Reusing MANIFEST /home/runner/workspace/.wwebjs_auth/session/Default/Local Storage/leveldb/MANIFEST-000001
+2025/10/29-20:24:53.462 6da Recovering log #3
+2025/10/29-20:24:53.465 6da Reusing old log /home/runner/workspace/.wwebjs_auth/session/Default/Local Storage/leveldb/000003.log 
+2025/10/29-20:26:54.068 720 Level-0 table #5: started
+2025/10/29-20:26:54.089 720 Level-0 table #5: 18613 bytes OK
+2025/10/29-20:26:54.094 720 Delete type=0 #3

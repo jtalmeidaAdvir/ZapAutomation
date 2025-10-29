@@ -1,36 +1,14 @@
-2025/10/29-18:01:12.783 68e Reusing MANIFEST /home/runner/workspace/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
-2025/10/29-18:01:12.783 68e Recovering log #195
-2025/10/29-18:01:12.784 68e Reusing old log /home/runner/workspace/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/000195.log 
-2025/10/29-18:01:12.784 68e Delete type=2 #194
-2025/10/29-18:01:14.969 695 Level-0 table #200: started
-2025/10/29-18:01:14.973 695 Level-0 table #200: 28735 bytes OK
-2025/10/29-18:01:14.980 695 Delete type=0 #195
-2025/10/29-18:01:14.981 695 Manual compaction at level-0 from '\x00N\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00O\x00\x00\x00' @ 0 : 0; will stop at '\x00O\x00\x00\x05' @ 110929 : 1
-2025/10/29-18:01:14.981 695 Compacting 1@0 + 1@1 files
-2025/10/29-18:01:15.161 695 Generated table #201@0: 52827 keys, 1018338 bytes
-2025/10/29-18:01:15.161 695 Compacted 1@0 + 1@1 files => 1018338 bytes
-2025/10/29-18:01:15.168 695 compacted to: files[ 0 1 1 0 0 0 0 ]
-2025/10/29-18:01:15.168 695 Delete type=2 #200
-2025/10/29-18:01:15.168 695 Manual compaction at level-0 from '\x00O\x00\x00\x05' @ 110929 : 1 .. '\x00O\x00\x00\x00' @ 0 : 0; will stop at (end)
-2025/10/29-18:01:15.178 6bd Level-0 table #203: started
-2025/10/29-18:01:15.183 6bd Level-0 table #203: 5491 bytes OK
-2025/10/29-18:01:15.229 6bd Delete type=2 #197
-2025/10/29-18:01:15.229 6bd Delete type=0 #199
-2025/10/29-18:01:15.230 6bd Manual compaction at level-0 from '\x00O\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00P\x00\x00\x00' @ 0 : 0; will stop at '\x00O\x00\x00\x05' @ 111062 : 0
-2025/10/29-18:01:15.230 6bd Compacting 1@0 + 1@1 files
-2025/10/29-18:01:15.477 6bd Generated table #204@0: 52868 keys, 1020955 bytes
-2025/10/29-18:01:15.477 6bd Compacted 1@0 + 1@1 files => 1020955 bytes
-2025/10/29-18:01:15.483 6bd compacted to: files[ 0 1 1 0 0 0 0 ]
-2025/10/29-18:01:15.484 6bd Manual compaction at level-0 from '\x00O\x00\x00\x05' @ 111062 : 0 .. '\x00P\x00\x00\x00' @ 0 : 0; will stop at (end)
-2025/10/29-18:06:17.160 69d Level-0 table #206: started
-2025/10/29-18:06:17.200 69d Level-0 table #206: 442768 bytes OK
-2025/10/29-18:06:17.208 69d Delete type=2 #201
-2025/10/29-18:06:17.209 69d Delete type=0 #202
-2025/10/29-18:06:17.209 69d Delete type=2 #203
-2025/10/29-18:06:17.211 69d Manual compaction at level-0 from '\x00Q\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00R\x00\x00\x00' @ 0 : 0; will stop at '\x00Q\x00\x00\x05' @ 129071 : 1
-2025/10/29-18:06:17.211 69d Compacting 1@0 + 1@1 files
-2025/10/29-18:06:17.317 69d Generated table #207@0: 60895 keys, 1164324 bytes
-2025/10/29-18:06:17.317 69d Compacted 1@0 + 1@1 files => 1164324 bytes
-2025/10/29-18:06:17.329 69d compacted to: files[ 0 1 1 0 0 0 0 ]
-2025/10/29-18:06:17.329 69d Delete type=2 #206
-2025/10/29-18:06:17.329 69d Manual compaction at level-0 from '\x00Q\x00\x00\x05' @ 129071 : 1 .. '\x00R\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/10/29-20:18:13.730 1da Reusing MANIFEST /home/runner/workspace/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/10/29-20:18:13.730 1da Recovering log #209
+2025/10/29-20:18:13.746 1da Reusing old log /home/runner/workspace/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/000209.log 
+2025/10/29-20:18:13.746 1da Delete type=2 #207
+2025/10/29-20:18:16.577 25e Level-0 table #214: started
+2025/10/29-20:18:16.609 25e Level-0 table #214: 120682 bytes OK
+2025/10/29-20:18:16.678 25e Delete type=0 #209
+2025/10/29-20:18:16.678 24e Manual compaction at level-0 from '\x00S\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00T\x00\x00\x00' @ 0 : 0; will stop at '\x00S\x00\x00\x05' @ 135991 : 1
+2025/10/29-20:18:16.678 24e Compacting 1@0 + 1@1 files
+2025/10/29-20:18:17.159 24e Generated table #215@0: 63836 keys, 1229127 bytes
+2025/10/29-20:18:17.159 24e Compacted 1@0 + 1@1 files => 1229127 bytes
+2025/10/29-20:18:17.182 24e compacted to: files[ 0 1 1 0 0 0 0 ]
+2025/10/29-20:18:17.182 24e Delete type=2 #214
+2025/10/29-20:18:17.182 24e Manual compaction at level-0 from '\x00S\x00\x00\x05' @ 135991 : 1 .. '\x00T\x00\x00\x00' @ 0 : 0; will stop at (end)

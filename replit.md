@@ -10,7 +10,10 @@ Aplicação fullstack para conectar um número ao WhatsApp Web e enviar resposta
 - **Node.js** com Express
 - **whatsapp-web.js** - Integração com WhatsApp Web
 - **Socket.IO** - Comunicação em tempo real para QR code e mensagens
+- **JWT (jsonwebtoken)** - Autenticação de usuários
+- **bcryptjs** - Hash de senhas
 - **In-memory storage** - Armazenamento de números autorizados e mensagens
+- **SQL Server (opcional)** - Suporte para armazenamento persistente com mssql
 
 ### Frontend
 - **React** com TypeScript
@@ -18,26 +21,46 @@ Aplicação fullstack para conectar um número ao WhatsApp Web e enviar resposta
 - **TanStack Query** - Gerenciamento de estado e cache
 - **Socket.IO Client** - Conexão WebSocket com backend
 - **Tailwind CSS** - Estilização
+- **AuthContext** - Gerenciamento de autenticação no frontend
 
 ## Estrutura do Projeto
 
 ```
-├── client/               # Frontend React
+├── client/                      # Frontend React
 │   ├── src/
-│   │   ├── components/  # Componentes reutilizáveis
-│   │   ├── hooks/       # Custom hooks (useWhatsApp)
-│   │   ├── pages/       # Páginas da aplicação
-│   │   └── lib/         # Utilitários
-├── server/              # Backend Node.js
-│   ├── routes.ts        # Rotas da API REST
-│   ├── storage.ts       # Interface de armazenamento
-│   ├── whatsapp.ts      # Serviço WhatsApp + Socket.IO
-│   └── index.ts         # Servidor principal
-└── shared/              # Tipos compartilhados
-    └── schema.ts        # Schemas Zod e tipos TypeScript
+│   │   ├── components/          # Componentes reutilizáveis
+│   │   │   ├── ProtectedRoute.tsx  # Proteção de rotas autenticadas
+│   │   │   └── ...
+│   │   ├── hooks/               # Custom hooks (useWhatsApp)
+│   │   ├── pages/               # Páginas da aplicação
+│   │   │   ├── Dashboard.tsx    # Página principal
+│   │   │   └── login.tsx        # Página de login/registro
+│   │   └── lib/                 # Utilitários
+│   │       ├── auth.tsx         # Contexto de autenticação
+│   │       └── queryClient.ts   # Cliente React Query com JWT
+├── server/                      # Backend Node.js
+│   ├── middleware/
+│   │   └── auth.ts              # Middleware JWT
+│   ├── routes.ts                # Rotas da API REST + autenticação
+│   ├── storage.ts               # Interface de armazenamento (MemStorage + SQL Server)
+│   ├── db.ts                    # Conexão SQL Server
+│   ├── whatsapp.ts              # Serviço WhatsApp + Socket.IO
+│   └── index.ts                 # Servidor principal
+└── shared/                      # Tipos compartilhados
+    └── schema.ts                # Schemas Zod e tipos TypeScript
 ```
 
 ## Funcionalidades Implementadas
+
+### ✅ Autenticação JWT
+- Sistema de registro e login de usuários
+- Autenticação via JSON Web Tokens (JWT)
+- Middleware de autenticação protegendo todas as rotas da API
+- Hash de senhas com bcryptjs
+- Armazenamento de token no localStorage
+- Auto-login após registro
+- Logout com limpeza de token
+- Proteção de rotas no frontend com ProtectedRoute
 
 ### ✅ Conexão ao WhatsApp
 - QR code gerado automaticamente via whatsapp-web.js
@@ -49,7 +72,7 @@ Aplicação fullstack para conectar um número ao WhatsApp Web e enviar resposta
 - Adicionar números via interface
 - Remover números da lista
 - Validação de formato de número
-- API REST para CRUD de números
+- API REST para CRUD de números (protegida por JWT)
 
 ### ✅ Respostas Automáticas
 - **Lógica implementada**: Mensagens recebidas de números autorizados recebem resposta automática
@@ -93,10 +116,52 @@ Quando uma mensagem é recebida:
 
 ## APIs Disponíveis
 
-### GET /api/authorized-numbers
+### Autenticação (Rotas Públicas)
+
+#### POST /api/auth/register
+Registra novo usuário e retorna token JWT
+```json
+{
+  "username": "usuario",
+  "password": "senha123"
+}
+```
+Resposta:
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": "uuid",
+    "username": "usuario"
+  }
+}
+```
+
+#### POST /api/auth/login
+Faz login e retorna token JWT
+```json
+{
+  "username": "usuario",
+  "password": "senha123"
+}
+```
+Resposta: mesma estrutura do registro
+
+#### GET /api/auth/me
+Retorna informações do usuário autenticado
+Requer: Header `Authorization: Bearer <token>`
+
+### Rotas Protegidas (Requerem JWT)
+
+**Todas as rotas abaixo requerem o header:**
+```
+Authorization: Bearer <seu-token-jwt>
+```
+
+#### GET /api/authorized-numbers
 Retorna lista de números autorizados
 
-### POST /api/authorized-numbers
+#### POST /api/authorized-numbers
 Adiciona novo número autorizado
 ```json
 {
@@ -105,10 +170,10 @@ Adiciona novo número autorizado
 }
 ```
 
-### DELETE /api/authorized-numbers/:id
+#### DELETE /api/authorized-numbers/:id
 Remove número autorizado
 
-### GET /api/messages
+#### GET /api/messages
 Retorna histórico de mensagens (ordenado por mais recente)
 
 ## WebSocket Events
@@ -185,10 +250,46 @@ Acesse: http://localhost:5000
 
 ## Segurança
 
-- Não há autenticação de usuário implementada (apenas uma instância por servidor)
-- WhatsApp session é privada e armazenada localmente
+### ✅ Autenticação JWT Implementada
+- Sistema de autenticação baseado em JWT (JSON Web Tokens)
+- Todas as rotas da API protegidas com middleware de autenticação
+- Senhas armazenadas com hash bcryptjs (10 rounds)
+- Tokens JWT com expiração de 7 dias
+- **IMPORTANTE**: Configure JWT_SECRET em produção (atualmente usando chave padrão)
+- Proteção de rotas no frontend com ProtectedRoute component
+
+### Armazenamento de Dados
+- **SQL Server (opcional)**: Suporte para armazenamento persistente
+  - Configurável via variáveis de ambiente (DB_HOST, DB_NAME, DB_USERNAME, DB_PASSWORD, DB_PORT)
+  - Fallback automático para armazenamento em memória se SQL Server não estiver disponível
+  - Tabelas criadas automaticamente ao conectar
+- **In-memory (padrão)**: Armazenamento volátil quando banco de dados não configurado
+- WhatsApp session é privada e armazenada localmente em `.wwebjs_auth/`
 - Não expõe credenciais ou tokens do WhatsApp
 - CORS configurado para aceitar qualquer origem (ajustar para produção)
 
-## Data: 29 de Outubro de 2025
-Versão inicial do sistema implementada com todas as funcionalidades básicas de automação WhatsApp.
+### Variáveis de Ambiente Opcionais
+```
+JWT_SECRET=seu-secret-seguro-em-producao
+DB_HOST=endereco-do-sql-server
+DB_PORT=1433
+DB_NAME=Advir
+DB_USERNAME=sa
+DB_PASSWORD=sua-senha
+```
+
+## Histórico de Mudanças
+
+### 29 de Outubro de 2025 - Autenticação JWT
+- ✅ Implementado sistema completo de autenticação JWT
+- ✅ Middleware de autenticação protegendo todas as rotas da API
+- ✅ Página de login/registro no frontend
+- ✅ Contexto de autenticação com AuthProvider
+- ✅ Proteção de rotas com ProtectedRoute component
+- ✅ Suporte a SQL Server com fallback para armazenamento em memória
+- ✅ Integração do token JWT em todas as requisições HTTP
+- ✅ Botão de logout no dashboard
+- ✅ Exibição do username do usuário logado
+
+### 29 de Outubro de 2025 - Versão Inicial
+- Versão inicial do sistema implementada com todas as funcionalidades básicas de automação WhatsApp
