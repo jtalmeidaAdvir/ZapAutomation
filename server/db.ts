@@ -22,6 +22,41 @@ const config: sql.config = {
 let pool: sql.ConnectionPool | null = null;
 let connectionFailed = false;
 
+async function ensureDatabaseExists() {
+  const dbName = process.env.DB_NAME || 'Advir';
+  
+  const masterConfig: sql.config = {
+    ...config,
+    database: 'master',
+  };
+
+  try {
+    const masterPool = await sql.connect(masterConfig);
+    
+    const result = await masterPool.request()
+      .input('dbName', sql.NVarChar, dbName)
+      .query(`
+        SELECT database_id 
+        FROM sys.databases 
+        WHERE name = @dbName
+      `);
+
+    if (result.recordset.length === 0) {
+      console.log(`⚙ Base de dados '${dbName}' não existe. Criando...`);
+      await masterPool.request()
+        .query(`CREATE DATABASE [${dbName}]`);
+      console.log(`✓ Base de dados '${dbName}' criada com sucesso`);
+    } else {
+      console.log(`✓ Base de dados '${dbName}' já existe`);
+    }
+
+    await masterPool.close();
+  } catch (error) {
+    console.error('✗ Erro ao verificar/criar base de dados:', error);
+    throw error;
+  }
+}
+
 export async function getPool(): Promise<sql.ConnectionPool> {
   if (connectionFailed) {
     throw new Error('SQL Server connection previously failed');
@@ -29,6 +64,8 @@ export async function getPool(): Promise<sql.ConnectionPool> {
   
   if (!pool) {
     try {
+      await ensureDatabaseExists();
+      
       pool = await sql.connect(config);
       console.log('✓ Conectado ao SQL Server com sucesso');
       await initializeTables();
