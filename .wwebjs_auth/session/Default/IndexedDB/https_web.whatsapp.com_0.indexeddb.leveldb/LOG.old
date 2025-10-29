@@ -1,0 +1,5 @@
+2025/10/29-17:43:15.699 fbb Reusing MANIFEST /home/runner/workspace/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/10/29-17:43:15.699 fbb Recovering log #178
+2025/10/29-17:43:15.769 fbb Reusing old log /home/runner/workspace/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/000178.log 
+2025/10/29-17:43:15.769 fbb Delete type=2 #177
+2025/10/29-17:43:15.769 fbb Delete type=2 #179
