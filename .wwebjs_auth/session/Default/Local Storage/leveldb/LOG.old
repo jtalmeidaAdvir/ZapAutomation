@@ -1,3 +1,3 @@
-2025/10/29-17:43:47.121 112f Reusing MANIFEST /home/runner/workspace/.wwebjs_auth/session/Default/Local Storage/leveldb/MANIFEST-000001
-2025/10/29-17:43:47.121 112f Recovering log #3
-2025/10/29-17:43:47.121 112f Reusing old log /home/runner/workspace/.wwebjs_auth/session/Default/Local Storage/leveldb/000003.log 
+2025/10/29-17:59:20.781 461 Reusing MANIFEST /home/runner/workspace/.wwebjs_auth/session/Default/Local Storage/leveldb/MANIFEST-000001
+2025/10/29-17:59:20.781 461 Recovering log #3
+2025/10/29-17:59:20.785 461 Reusing old log /home/runner/workspace/.wwebjs_auth/session/Default/Local Storage/leveldb/000003.log 

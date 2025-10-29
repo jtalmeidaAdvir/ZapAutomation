@@ -39,28 +39,29 @@ export function initializeWhatsApp(httpServer: HTTPServer) {
   return io;
 }
 
-function startWhatsAppClient(socket: any): void {
-  if (whatsappClient) {
-    whatsappClient.destroy();
-  }
+async function startWhatsAppClient(socket: any): Promise<void> {
+  try {
+    if (whatsappClient) {
+      whatsappClient.destroy();
+    }
 
-  whatsappClient = new Client({
-    authStrategy: new LocalAuth({
-      dataPath: ".wwebjs_auth",
-    }),
-    puppeteer: {
-      headless: true,
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-accelerated-2d-canvas",
-        "--no-first-run",
-        "--no-zygote",
-        "--disable-gpu",
-      ],
-    },
-  });
+    whatsappClient = new Client({
+      authStrategy: new LocalAuth({
+        dataPath: ".wwebjs_auth",
+      }),
+      puppeteer: {
+        headless: true,
+        args: [
+          "--no-sandbox",
+          "--disable-setuid-sandbox",
+          "--disable-dev-shm-usage",
+          "--disable-accelerated-2d-canvas",
+          "--no-first-run",
+          "--no-zygote",
+          "--disable-gpu",
+        ],
+      },
+    });
 
   whatsappClient.on("qr", async (qr: string) => {
     console.log("QR Code recebido, gerando imagem...");
@@ -155,7 +156,12 @@ function startWhatsAppClient(socket: any): void {
     }
   });
 
-  whatsappClient.initialize();
+    await whatsappClient.initialize();
+  } catch (error) {
+    console.error("Erro ao inicializar WhatsApp:", error);
+    socket.emit("error", "Não foi possível inicializar o WhatsApp. O ambiente Replit pode não suportar o Puppeteer necessário para o WhatsApp Web.js.");
+    whatsappClient = null;
+  }
 }
 
 export function getWhatsAppClient() {
