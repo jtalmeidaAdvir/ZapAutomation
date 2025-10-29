@@ -1,5 +1,6 @@
 import { type User, type InsertUser, type AuthorizedNumber, type InsertAuthorizedNumber, type Message, type InsertMessage } from "@shared/schema";
 import { randomUUID } from "crypto";
+import { getPool } from "./db";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -86,4 +87,124 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+export class SqlServerStorage implements IStorage {
+  async getUser(id: string): Promise<User | undefined> {
+    const pool = await getPool();
+    const result = await pool.request()
+      .input('id', id)
+      .query('SELECT * FROM users WHERE id = @id');
+    return result.recordset[0];
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const pool = await getPool();
+    const result = await pool.request()
+      .input('username', username)
+      .query('SELECT * FROM users WHERE username = @username');
+    return result.recordset[0];
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const pool = await getPool();
+    const id = randomUUID();
+    await pool.request()
+      .input('id', id)
+      .input('username', insertUser.username)
+      .input('password', insertUser.password)
+      .query('INSERT INTO users (id, username, password) VALUES (@id, @username, @password)');
+    return { id, ...insertUser };
+  }
+
+  async getAllAuthorizedNumbers(): Promise<AuthorizedNumber[]> {
+    const pool = await getPool();
+    const result = await pool.request()
+      .query('SELECT * FROM authorized_numbers ORDER BY date_added DESC');
+    return result.recordset.map((row: any) => ({
+      id: row.id,
+      phone: row.phone,
+      label: row.label,
+      dateAdded: new Date(row.date_added),
+    }));
+  }
+
+  async getAuthorizedNumberByPhone(phone: string): Promise<AuthorizedNumber | undefined> {
+    const pool = await getPool();
+    const result = await pool.request()
+      .input('phone', phone)
+      .query('SELECT * FROM authorized_numbers WHERE phone = @phone');
+    
+    if (result.recordset.length === 0) return undefined;
+    
+    const row = result.recordset[0];
+    return {
+      id: row.id,
+      phone: row.phone,
+      label: row.label,
+      dateAdded: new Date(row.date_added),
+    };
+  }
+
+  async createAuthorizedNumber(insertNumber: InsertAuthorizedNumber): Promise<AuthorizedNumber> {
+    const pool = await getPool();
+    const id = randomUUID();
+    const dateAdded = new Date();
+    
+    await pool.request()
+      .input('id', id)
+      .input('phone', insertNumber.phone)
+      .input('label', insertNumber.label)
+      .query('INSERT INTO authorized_numbers (id, phone, label) VALUES (@id, @phone, @label)');
+    
+    return {
+      id,
+      phone: insertNumber.phone,
+      label: insertNumber.label,
+      dateAdded,
+    };
+  }
+
+  async deleteAuthorizedNumber(id: string): Promise<boolean> {
+    const pool = await getPool();
+    const result = await pool.request()
+      .input('id', id)
+      .query('DELETE FROM authorized_numbers WHERE id = @id');
+    return result.rowsAffected[0] > 0;
+  }
+
+  async getAllMessages(): Promise<Message[]> {
+    const pool = await getPool();
+    const result = await pool.request()
+      .query('SELECT * FROM messages ORDER BY timestamp DESC');
+    return result.recordset.map((row: any) => ({
+      id: row.id,
+      phone: row.phone,
+      content: row.content,
+      direction: row.direction,
+      timestamp: new Date(row.timestamp),
+    }));
+  }
+
+  async createMessage(insertMessage: InsertMessage): Promise<Message> {
+    const pool = await getPool();
+    const id = randomUUID();
+    const timestamp = new Date();
+    
+    await pool.request()
+      .input('id', id)
+      .input('phone', insertMessage.phone)
+      .input('content', insertMessage.content)
+      .input('direction', insertMessage.direction)
+      .query('INSERT INTO messages (id, phone, content, direction) VALUES (@id, @phone, @content, @direction)');
+    
+    return {
+      id,
+      phone: insertMessage.phone,
+      content: insertMessage.content,
+      direction: insertMessage.direction,
+      timestamp,
+    };
+  }
+}
+
+const useSqlServer = process.env.DB_HOST && process.env.DB_NAME;
+export const storage: IStorage = useSqlServer ? new SqlServerStorage() : new MemStorage();
