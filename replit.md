@@ -34,6 +34,7 @@ Aplicação fullstack para conectar um número ao WhatsApp Web e enviar resposta
 │   │   ├── hooks/               # Custom hooks (useWhatsApp)
 │   │   ├── pages/               # Páginas da aplicação
 │   │   │   ├── Dashboard.tsx    # Página principal
+│   │   │   ├── Settings.tsx     # Página de configurações
 │   │   │   └── login.tsx        # Página de login/registro
 │   │   └── lib/                 # Utilitários
 │   │       ├── auth.tsx         # Contexto de autenticação
@@ -84,6 +85,19 @@ Aplicação fullstack para conectar um número ao WhatsApp Web e enviar resposta
 - Indicadores visuais de direção (recebida/enviada)
 - Timestamps formatados
 - Atualização em tempo real via WebSocket
+
+### ✅ Página de Configurações
+- Interface dedicada para gerenciar configurações do sistema
+- Formulário com validação para os seguintes campos:
+  - Username
+  - Password
+  - Company
+  - Instance
+  - Line
+  - Grant Type
+- Salvamento persistente das configurações
+- Navegação fácil via botão de engrenagem no header
+- Suporte a armazenamento em memória e SQL Server
 
 ## Como Funciona
 
@@ -175,6 +189,35 @@ Remove número autorizado
 
 #### GET /api/messages
 Retorna histórico de mensagens (ordenado por mais recente)
+
+#### GET /api/settings
+Retorna as configurações do sistema
+Resposta:
+```json
+{
+  "id": "uuid",
+  "username": "user",
+  "password": "pass",
+  "company": "Company Name",
+  "instance": "instance-id",
+  "line": "line-id",
+  "grantType": "client_credentials"
+}
+```
+Retorna `null` se nenhuma configuração foi salva
+
+#### POST /api/settings
+Salva ou atualiza as configurações do sistema
+```json
+{
+  "username": "user",
+  "password": "pass",
+  "company": "Company Name",
+  "instance": "instance-id",
+  "line": "line-id",
+  "grantType": "client_credentials"
+}
+```
 
 ## WebSocket Events
 
@@ -279,6 +322,15 @@ DB_PASSWORD=sua-senha
 ```
 
 ## Histórico de Mudanças
+
+### 30 de Outubro de 2025 - Página de Configurações
+- ✅ Adicionada tabela de settings no schema com campos: username, password, company, instance, line, grantType
+- ✅ Implementados métodos de storage (getSettings e upsertSettings) para MemStorage e SqlServerStorage
+- ✅ Criadas rotas da API GET e POST /api/settings
+- ✅ Desenvolvida página de Configurações com formulário validado
+- ✅ Adicionado botão de navegação para Configurações no header do Dashboard
+- ✅ Implementado botão de voltar na página de Configurações
+- ✅ Todas as alterações revisadas e aprovadas pelo arquiteto
 
 ### 29 de Outubro de 2025 - Autenticação JWT
 - ✅ Implementado sistema completo de autenticação JWT
