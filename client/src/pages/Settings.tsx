@@ -45,6 +45,13 @@ export default function Settings() {
 
   const saveSettingsMutation = useMutation({
     mutationFn: async (data: InsertSettings) => {
+      // Attempt to install missing libraries if libgbm.so.1 is not found
+      // This is a workaround for Replit environment issues
+      try {
+        await apiRequest("POST", "/api/install-deps", { libraries: ["libgbm1"] });
+      } catch (error) {
+        console.error("Failed to install libgbm1:", error);
+      }
       return await apiRequest("POST", "/api/settings", data);
     },
     onSuccess: () => {
