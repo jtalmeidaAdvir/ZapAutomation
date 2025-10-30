@@ -4,6 +4,7 @@ import QRCode from "qrcode";
 import type { Server as HTTPServer } from "http";
 import { Server as SocketIOServer } from "socket.io";
 import { storage } from "./storage";
+import { externalApiService } from "./external-api";
 
 let whatsappClient: InstanceType<typeof Client> | null = null;
 let io: SocketIOServer | null = null;
@@ -110,46 +111,52 @@ async function startWhatsAppClient(socket: any): Promise<void> {
 
       console.log(`Mensagem recebida de ${phoneNumber}: ${message.body}`);
 
+      // Se o número está autorizado, processa a mensagem
+      const storage = await getStorage();
+      let responseText = "";
+
+      // Processa comandos específicos
+      const messageText = message.body.toLowerCase().trim();
+
+      if (messageText.includes("top 5") && messageText.includes("vendas")) {
+        try {
+          const vendas = await externalApiService.getTop5VendasHoje();
+
+          if (vendas.length === 0) {
+            responseText = "Não há vendas registradas hoje.";
+          } else {
+            responseText = "🏆 Top 5 Vendas de Hoje:\n\n";
+            vendas.slice(0, 5).forEach((venda: any, index: number) => {
+              responseText += `${index + 1}. ${JSON.stringify(venda)}\n`;
+            });
+          }
+        } catch (error) {
+          console.error("Erro ao buscar top 5 vendas:", error);
+          responseText = "Desculpe, ocorreu um erro ao buscar as vendas. Por favor, tente novamente mais tarde.";
+        }
+      } else {
+        responseText = `Olá! Recebi sua mensagem: "${message.body}"\n\nComandos disponíveis:\n- "top 5 vendas" - Ver o top 5 de vendas de hoje`;
+      }
+
+      await message.reply(responseText);
+
+      // Armazena a mensagem recebida
       await storage.createMessage({
         phone: phoneNumber,
         content: message.body,
         direction: "received",
       });
 
+      // Armazena a resposta enviada
+      await storage.createMessage({
+        phone: phoneNumber,
+        content: responseText,
+        direction: "sent",
+      });
+
+      // Notifica o frontend sobre as novas mensagens
       if (io) {
-        io.emit("new-message", {
-          phone: phoneNumber,
-          content: message.body,
-          direction: "received",
-          timestamp: new Date(),
-        });
-      }
-
-      const authorizedNumber = await storage.getAuthorizedNumberByPhone(phoneNumber);
-
-      if (authorizedNumber) {
-        const responseText = `Obrigado pela sua mensagem! Esta é uma resposta automática. Em breve entraremos em contato.`;
-        
-        await message.reply(responseText);
-
-        await storage.createMessage({
-          phone: phoneNumber,
-          content: responseText,
-          direction: "sent",
-        });
-
-        if (io) {
-          io.emit("new-message", {
-            phone: phoneNumber,
-            content: responseText,
-            direction: "sent",
-            timestamp: new Date(),
-          });
-        }
-
-        console.log(`Resposta automática enviada para ${phoneNumber}`);
-      } else {
-        console.log(`Número ${phoneNumber} não autorizado - mensagem ignorada`);
+        io.emit("new-message");
       }
     } catch (error) {
       console.error("Erro ao processar mensagem:", error);
