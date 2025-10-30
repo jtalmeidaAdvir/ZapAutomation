@@ -3,12 +3,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/lib/auth";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, Settings as SettingsIcon } from "lucide-react";
+import { LogOut, Settings as SettingsIcon, ArrowLeft } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import { insertSettingsSchema, type Settings as SettingsType, type InsertSettings } from "@shared/schema";
 
@@ -77,6 +78,16 @@ export default function Settings() {
       <div className="container mx-auto p-4 max-w-4xl">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
+            <Link href="/">
+              <Button
+                variant="ghost"
+                size="sm"
+                data-testid="button-back"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Voltar
+              </Button>
+            </Link>
             <SettingsIcon className="h-8 w-8 text-primary" />
             <h1 className="text-3xl font-bold text-foreground">Configurações</h1>
           </div>

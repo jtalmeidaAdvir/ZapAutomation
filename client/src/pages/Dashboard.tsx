@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useWhatsApp } from "@/hooks/useWhatsApp";
 import { useAuth } from "@/lib/auth";
+import { Link } from "wouter";
 import QRCodeDisplay from "@/components/QRCodeDisplay";
 import ConnectionStatus from "@/components/ConnectionStatus";
 import AuthorizedNumbers from "@/components/AuthorizedNumbers";
@@ -10,7 +11,7 @@ import MessageLog from "@/components/MessageLog";
 import AddNumberModal from "@/components/AddNumberModal";
 import ThemeToggle from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import { LogOut, Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { AuthorizedNumber as AuthorizedNumberType, Message as MessageType } from "@shared/schema";
 
@@ -141,6 +142,16 @@ export default function Dashboard() {
                   {user?.username}
                 </span>
                 <ThemeToggle />
+                <Link href="/settings">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    data-testid="button-settings"
+                    title="Configurações"
+                  >
+                    <Settings className="h-5 w-5" />
+                  </Button>
+                </Link>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -177,6 +188,16 @@ export default function Dashboard() {
                 {user?.username}
               </span>
               <ThemeToggle />
+              <Link href="/settings">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  data-testid="button-settings"
+                  title="Configurações"
+                >
+                  <Settings className="h-5 w-5" />
+                </Button>
+              </Link>
               <Button
                 variant="ghost"
                 size="icon"
