@@ -6,15 +6,15 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  
+
   getAllAuthorizedNumbers(): Promise<AuthorizedNumber[]>;
   getAuthorizedNumberByPhone(phone: string): Promise<AuthorizedNumber | undefined>;
   createAuthorizedNumber(number: InsertAuthorizedNumber): Promise<AuthorizedNumber>;
   deleteAuthorizedNumber(id: string): Promise<boolean>;
-  
+
   getAllMessages(): Promise<Message[]>;
   createMessage(message: InsertMessage): Promise<Message>;
-  
+
   getSettings(): Promise<Settings | undefined>;
   upsertSettings(settings: InsertSettings): Promise<Settings>;
 }
@@ -151,9 +151,9 @@ export class SqlServerStorage implements IStorage {
     const result = await pool.request()
       .input('phone', phone)
       .query('SELECT * FROM authorized_numbers WHERE phone = @phone');
-    
+
     if (result.recordset.length === 0) return undefined;
-    
+
     const row = result.recordset[0];
     return {
       id: row.id,
@@ -167,13 +167,13 @@ export class SqlServerStorage implements IStorage {
     const pool = await getPool();
     const id = randomUUID();
     const dateAdded = new Date();
-    
+
     await pool.request()
       .input('id', id)
       .input('phone', insertNumber.phone)
       .input('label', insertNumber.label)
       .query('INSERT INTO authorized_numbers (id, phone, label) VALUES (@id, @phone, @label)');
-    
+
     return {
       id,
       phone: insertNumber.phone,
@@ -207,14 +207,14 @@ export class SqlServerStorage implements IStorage {
     const pool = await getPool();
     const id = randomUUID();
     const timestamp = new Date();
-    
+
     await pool.request()
       .input('id', id)
       .input('phone', insertMessage.phone)
       .input('content', insertMessage.content)
       .input('direction', insertMessage.direction)
       .query('INSERT INTO messages (id, phone, content, direction) VALUES (@id, @phone, @content, @direction)');
-    
+
     return {
       id,
       phone: insertMessage.phone,
@@ -228,9 +228,9 @@ export class SqlServerStorage implements IStorage {
     const pool = await getPool();
     const result = await pool.request()
       .query('SELECT TOP 1 * FROM settings');
-    
+
     if (result.recordset.length === 0) return undefined;
-    
+
     const row = result.recordset[0];
     return {
       id: row.id,
@@ -246,47 +246,61 @@ export class SqlServerStorage implements IStorage {
   async upsertSettings(insertSettings: InsertSettings): Promise<Settings> {
     const pool = await getPool();
     const existing = await this.getSettings();
-    
+    const id = existing?.id || randomUUID();
+
     if (existing) {
-      await pool.request()
-        .input('id', existing.id)
-        .input('username', insertSettings.username)
-        .input('password', insertSettings.password)
-        .input('company', insertSettings.company)
-        .input('instance', insertSettings.instance)
-        .input('line', insertSettings.line)
-        .input('grant_type', insertSettings.grantType)
-        .query(`UPDATE settings SET username = @username, password = @password, company = @company, 
-                instance = @instance, line = @line, grant_type = @grant_type WHERE id = @id`);
-      
-      return {
-        id: existing.id,
-        ...insertSettings,
-      };
-    } else {
-      const id = randomUUID();
       await pool.request()
         .input('id', id)
         .input('username', insertSettings.username)
         .input('password', insertSettings.password)
         .input('company', insertSettings.company)
+        .input('url', insertSettings.url)
         .input('instance', insertSettings.instance)
         .input('line', insertSettings.line)
-        .input('grant_type', insertSettings.grantType)
-        .query(`INSERT INTO settings (id, username, password, company, instance, line, grant_type) 
-                VALUES (@id, @username, @password, @company, @instance, @line, @grant_type)`);
-      
-      return {
-        id,
-        ...insertSettings,
-      };
+        .input('grantType', insertSettings.grantType)
+        .query(`
+          UPDATE settings 
+          SET username = @username, 
+              password = @password, 
+              company = @company,
+              url = @url,
+              instance = @instance,
+              line = @line,
+              grant_type = @grantType
+          WHERE id = @id
+        `);
+    } else {
+      await pool.request()
+        .input('id', id)
+        .input('username', insertSettings.username)
+        .input('password', insertSettings.password)
+        .input('company', insertSettings.company)
+        .input('url', insertSettings.url)
+        .input('instance', insertSettings.instance)
+        .input('line', insertSettings.line)
+        .input('grantType', insertSettings.grantType)
+        .query(`
+          INSERT INTO settings (id, username, password, company, url, instance, line, grant_type)
+          VALUES (@id, @username, @password, @company, @url, @instance, @line, @grantType)
+        `);
     }
+
+    return {
+      id,
+      username: insertSettings.username,
+      password: insertSettings.password,
+      company: insertSettings.company,
+      url: insertSettings.url,
+      instance: insertSettings.instance,
+      line: insertSettings.line,
+      grantType: insertSettings.grantType,
+    };
   }
 }
 
 async function initializeStorage(): Promise<IStorage> {
   const shouldUseSqlServer = process.env.DB_HOST && process.env.DB_NAME;
-  
+
   if (shouldUseSqlServer) {
     try {
       const testStorage = new SqlServerStorage();
@@ -298,7 +312,7 @@ async function initializeStorage(): Promise<IStorage> {
       return new MemStorage();
     }
   }
-  
+
   console.log('✓ Usando armazenamento em memória');
   return new MemStorage();
 }

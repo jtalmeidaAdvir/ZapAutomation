@@ -58,8 +58,14 @@ export const settings = pgTable("settings", {
   grantType: text("grant_type").notNull(),
 });
 
-export const insertSettingsSchema = createInsertSchema(settings).omit({
-  id: true,
+export const insertSettingsSchema = z.object({
+  username: z.string().min(1, "Username é obrigatório"),
+  password: z.string().min(1, "Password é obrigatório"),
+  company: z.string().min(1, "Company é obrigatório"),
+  url: z.string().url("URL inválido").min(1, "URL é obrigatório"),
+  instance: z.string().min(1, "Instance é obrigatório"),
+  line: z.string().min(1, "Line é obrigatório"),
+  grantType: z.string().min(1, "Grant Type é obrigatório"),
 });
 
 export type InsertSettings = z.infer<typeof insertSettingsSchema>;

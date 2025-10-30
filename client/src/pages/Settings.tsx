@@ -27,6 +27,7 @@ export default function Settings() {
       username: "",
       password: "",
       company: "",
+      url: "",
       instance: "",
       line: "",
       grantType: "",
@@ -35,6 +36,7 @@ export default function Settings() {
       username: settings.username,
       password: settings.password,
       company: settings.company,
+      url: settings.url,
       instance: settings.instance,
       line: settings.line,
       grantType: settings.grantType,
@@ -165,6 +167,25 @@ export default function Settings() {
                           type="text"
                           placeholder="Digite a company"
                           data-testid="input-settings-company"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="url"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel data-testid="label-settings-url">URL da Empresa</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="url"
+                          placeholder="Digite a URL da empresa"
+                          data-testid="input-settings-url"
                         />
                       </FormControl>
                       <FormMessage />

@@ -24,7 +24,7 @@ let connectionFailed = false;
 
 async function ensureDatabaseExists() {
   const dbName = process.env.DB_NAME || 'Advir';
-  
+
   const masterConfig: sql.config = {
     ...config,
     database: 'master',
@@ -32,7 +32,7 @@ async function ensureDatabaseExists() {
 
   try {
     const masterPool = await sql.connect(masterConfig);
-    
+
     const result = await masterPool.request()
       .input('dbName', sql.NVarChar, dbName)
       .query(`
@@ -61,11 +61,11 @@ export async function getPool(): Promise<sql.ConnectionPool> {
   if (connectionFailed) {
     throw new Error('SQL Server connection previously failed');
   }
-  
+
   if (!pool) {
     try {
       await ensureDatabaseExists();
-      
+
       pool = await sql.connect(config);
       console.log('✓ Conectado ao SQL Server com sucesso');
       await initializeTables();
@@ -111,6 +111,20 @@ async function initializeTables() {
         timestamp DATETIME NOT NULL DEFAULT GETDATE()
       )
     `);
+
+    await pool.request().query(`
+        IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'settings')
+        CREATE TABLE settings (
+          id NVARCHAR(36) PRIMARY KEY,
+          username NVARCHAR(255) NOT NULL,
+          password NVARCHAR(255) NOT NULL,
+          company NVARCHAR(255) NOT NULL,
+          url NVARCHAR(500) NOT NULL,
+          instance NVARCHAR(255) NOT NULL,
+          line NVARCHAR(255) NOT NULL,
+          grant_type NVARCHAR(255) NOT NULL
+        )
+      `);
 
     console.log('✓ Tabelas SQL Server verificadas/criadas com sucesso');
   } catch (error) {
