@@ -53,6 +53,7 @@ export const settings = pgTable("settings", {
   username: text("username").notNull(),
   password: text("password").notNull(),
   company: text("company").notNull(),
+  url: text("url").notNull(),
   instance: text("instance").notNull(),
   line: text("line").notNull(),
   grantType: text("grant_type").notNull(),

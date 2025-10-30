@@ -91,8 +91,51 @@ class ExternalApiService {
     return await response.json();
   }
 
-  async getTop5VendasHoje(): Promise<any[]> {
-    const response = await this.callApi('GetDados/Top5VendasPrecHoje');
+  async getTop5VendasHoje(serie?: string | null): Promise<any[]> {
+    const endpoint = serie 
+      ? `GetDados/Top5VendasPrecHoje?serie=${encodeURIComponent(serie)}`
+      : 'GetDados/Top5VendasPrecHoje';
+    const response = await this.callApi(endpoint);
+    return response.DataSet.Table || [];
+  }
+
+  async getTop5VendasSemana(serie?: string | null): Promise<any[]> {
+    const endpoint = serie 
+      ? `GetDados/Top5VendasPrecSemana?serie=${encodeURIComponent(serie)}`
+      : 'GetDados/Top5VendasPrecSemana';
+    const response = await this.callApi(endpoint);
+    return response.DataSet.Table || [];
+  }
+
+  async getTop5VendasMes(serie?: string | null): Promise<any[]> {
+    const endpoint = serie 
+      ? `GetDados/Top5VendasPrecMes?serie=${encodeURIComponent(serie)}`
+      : 'GetDados/Top5VendasPrecMes';
+    const response = await this.callApi(endpoint);
+    return response.DataSet.Table || [];
+  }
+
+  async getVendasHoje(serie?: string | null): Promise<any[]> {
+    const endpoint = serie 
+      ? `GetDados/VendasPrecHoje?serie=${encodeURIComponent(serie)}`
+      : 'GetDados/VendasPrecHoje';
+    const response = await this.callApi(endpoint);
+    return response.DataSet.Table || [];
+  }
+
+  async getVendasSemana(serie?: string | null): Promise<any[]> {
+    const endpoint = serie 
+      ? `GetDados/VendasPrecSemana?serie=${encodeURIComponent(serie)}`
+      : 'GetDados/VendasPrecSemana';
+    const response = await this.callApi(endpoint);
+    return response.DataSet.Table || [];
+  }
+
+  async getVendasMes(serie?: string | null): Promise<any[]> {
+    const endpoint = serie 
+      ? `GetDados/VendasPrecMes?serie=${encodeURIComponent(serie)}`
+      : 'GetDados/VendasPrecMes';
+    const response = await this.callApi(endpoint);
     return response.DataSet.Table || [];
   }
 }
