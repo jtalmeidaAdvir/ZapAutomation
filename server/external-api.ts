@@ -93,7 +93,7 @@ class ExternalApiService {
 
   async getTop5VendasHoje(serie?: string | null): Promise<any[]> {
     const endpoint = serie 
-      ? `GetDados/Top5VendasPrecHoje?serie=${encodeURIComponent(serie)}`
+      ? `GetDados/Top5VendasPrecHoje/${encodeURIComponent(serie)}`
       : 'GetDados/Top5VendasPrecHoje';
     const response = await this.callApi(endpoint);
     return response.DataSet.Table || [];
@@ -101,7 +101,7 @@ class ExternalApiService {
 
   async getTop5VendasSemana(serie?: string | null): Promise<any[]> {
     const endpoint = serie 
-      ? `GetDados/Top5VendasPrecSemana?serie=${encodeURIComponent(serie)}`
+      ? `GetDados/Top5VendasPrecSemana/${encodeURIComponent(serie)}`
       : 'GetDados/Top5VendasPrecSemana';
     const response = await this.callApi(endpoint);
     return response.DataSet.Table || [];
@@ -109,7 +109,7 @@ class ExternalApiService {
 
   async getTop5VendasMes(serie?: string | null): Promise<any[]> {
     const endpoint = serie 
-      ? `GetDados/Top5VendasPrecMes?serie=${encodeURIComponent(serie)}`
+      ? `GetDados/Top5VendasPrecMes/${encodeURIComponent(serie)}`
       : 'GetDados/Top5VendasPrecMes';
     const response = await this.callApi(endpoint);
     return response.DataSet.Table || [];
@@ -117,25 +117,36 @@ class ExternalApiService {
 
   async getVendasHoje(serie?: string | null): Promise<any[]> {
     const endpoint = serie 
-      ? `GetDados/VendasPrecHoje?serie=${encodeURIComponent(serie)}`
+      ? `GetDados/VendasPrecHoje/${encodeURIComponent(serie)}`
       : 'GetDados/VendasPrecHoje';
+    console.log(`[API] Chamando endpoint: ${endpoint}`);
     const response = await this.callApi(endpoint);
+    console.log(`[API] Resposta recebida com ${response.DataSet.Table?.length || 0} registros`);
     return response.DataSet.Table || [];
   }
 
   async getVendasSemana(serie?: string | null): Promise<any[]> {
     const endpoint = serie 
-      ? `GetDados/VendasPrecSemana?serie=${encodeURIComponent(serie)}`
+      ? `GetDados/VendasPrecSemana/${encodeURIComponent(serie)}`
       : 'GetDados/VendasPrecSemana';
+    console.log(`[API] Chamando endpoint: ${endpoint}`);
     const response = await this.callApi(endpoint);
+    console.log(`[API] Resposta recebida com ${response.DataSet.Table?.length || 0} registros`);
     return response.DataSet.Table || [];
   }
 
   async getVendasMes(serie?: string | null): Promise<any[]> {
     const endpoint = serie 
-      ? `GetDados/VendasPrecMes?serie=${encodeURIComponent(serie)}`
+      ? `GetDados/VendasPrecMes/${encodeURIComponent(serie)}`
       : 'GetDados/VendasPrecMes';
+    console.log(`[API] Chamando endpoint: ${endpoint}`);
     const response = await this.callApi(endpoint);
+    console.log(`[API] Resposta recebida com ${response.DataSet.Table?.length || 0} registros`);
+    return response.DataSet.Table || [];
+  }
+
+  async getSeriesVendas(): Promise<any[]> {
+    const response = await this.callApi('GetDados/SeriesVendas');
     return response.DataSet.Table || [];
   }
 }

@@ -115,8 +115,27 @@ async function startWhatsAppClient(socket: any): Promise<void> {
         console.log(`Mensagem recebida de ${phoneNumber}: ${message.body}`);
 
         const storage = await getStorage();
-        let responseText = "";
+        
+        // Armazena a mensagem recebida no histórico
+        await storage.createMessage({
+          phone: phoneNumber,
+          content: message.body,
+          direction: "received",
+        });
 
+        // Verifica se o número está autorizado
+        const isAuthorized = await storage.getAuthorizedNumberByPhone(phoneNumber);
+        
+        if (!isAuthorized) {
+          console.log(`Número ${phoneNumber} não autorizado. Mensagem ignorada.`);
+          // Notifica o frontend sobre a nova mensagem (mesmo que não autorizada)
+          if (io) {
+            io.emit("new-message");
+          }
+          return; // Não processa a mensagem
+        }
+
+        let responseText = "";
         const messageText = message.body.trim();
         const userState = userStates.get(phoneNumber);
 
@@ -139,28 +158,55 @@ async function startWhatsAppClient(socket: any): Promise<void> {
         // Pergunta se quer filtrar por loja (Vendas Globais)
         else if (userState.step === "vendas_globais_loja") {
           if (messageText === "1") {
-            // Usuário quer filtrar por série
-            userStates.set(phoneNumber, { step: "vendas_globais_serie_input" });
-            responseText = `Digite o número da série/loja:`;
+            // Usuário quer filtrar por série - busca séries disponíveis
+            try {
+              const series = await externalApiService.getSeriesVendas();
+              if (series.length === 0) {
+                responseText = `Nenhuma série disponível no momento.`;
+                userStates.set(phoneNumber, { step: "main" });
+              } else {
+                let seriesText = `📋 *Séries Disponíveis:*\n\n`;
+                series.forEach((s: any, index: number) => {
+                  seriesText += `${index + 1}. ${s.serie} - ${s.Descricao}\n`;
+                });
+                seriesText += `\nDigite o número da opção desejada:`;
+                responseText = seriesText;
+                userStates.set(phoneNumber, { 
+                  step: "vendas_globais_serie_input",
+                  data: { seriesList: series }
+                });
+              }
+            } catch (error) {
+              console.error("Erro ao buscar séries:", error);
+              responseText = "Erro ao buscar séries disponíveis. Tente novamente.";
+              userStates.set(phoneNumber, { step: "main" });
+            }
           } else if (messageText === "2") {
             // Não quer filtrar, vai direto para escolha de período
             userStates.set(phoneNumber, {
               step: "vendas_globais_periodo",
               data: { serie: null },
             });
-            responseText = `💰 *Vendas*\n\nEscolha o período:\n\n1. Hoje\n2. Ultimos 7 dias\n3. Mês`;
+            responseText = `💰 *Vendas*\n\nEscolha o período:\n\n1. Hoje\n2. Últimos 7 dias`;
           } else {
-            responseText = `Opção inválida. Por favor, escolha:\n\n1. Sim\n2. Não (todas as lojas)`;
+            responseText = `Opção inválida. Por favor, escolha:\n\n1. Por Loja/Serie\n2. Todas as Lojas`;
           }
         }
         // Input da série (Vendas Globais)
         else if (userState.step === "vendas_globais_serie_input") {
-          const serie = messageText.trim();
-          userStates.set(phoneNumber, {
-            step: "vendas_globais_periodo",
-            data: { serie },
-          });
-          responseText = `💰 *Vendas - Série ${serie}*\n\nEscolha o período:\n\n1. Hoje\n2. Ultimos 7 dias\n3. Mês`;
+          const selectedIndex = parseInt(messageText.trim()) - 1;
+          const seriesList = userState.data?.seriesList || [];
+          
+          if (selectedIndex >= 0 && selectedIndex < seriesList.length) {
+            const selectedSerie = seriesList[selectedIndex];
+            userStates.set(phoneNumber, {
+              step: "vendas_globais_periodo",
+              data: { serie: selectedSerie.serie },
+            });
+            responseText = `💰 *Vendas - Série ${selectedSerie.serie} (${selectedSerie.Descricao})*\n\nEscolha o período:\n\n1. Hoje\n2. Últimos 7 dias`;
+          } else {
+            responseText = `Opção inválida. Por favor, escolha um número entre 1 e ${seriesList.length}.`;
+          }
         }
         // Submenu de Vendas Globais
         else if (userState.step === "vendas_globais_periodo") {
@@ -222,46 +268,37 @@ async function startWhatsAppClient(socket: any): Promise<void> {
             userStates.set(phoneNumber, { step: "main" });
             responseText +=
               "\n---\nDigite qualquer mensagem para voltar ao menu principal.";
-          } else if (messageText === "3") {
-            // Vendas do Mês
-            try {
-              const serie = userState.data?.serie || null;
-              const vendas = await externalApiService.getVendasMes(serie);
-
-              if (vendas.length === 0) {
-                responseText = serie
-                  ? `Não há vendas registradas este mês para a série ${serie}.`
-                  : "Não há vendas registradas este mês.";
-              } else {
-                responseText = serie
-                  ? `💰 *Vendas do Mês - Série ${serie}:*\n\n`
-                  : "💰 *Vendas do Mês:*\n\n";
-                let total = 0;
-                vendas.forEach((venda: any) => {
-                  responseText += `${venda.TipoDoc} ${venda.Serie}/${venda.NumDoc} - €${parseFloat(venda.TotalMerc).toFixed(2)}\n`;
-                  total += parseFloat(venda.TotalMerc);
-                });
-                responseText += `\n*Total: €${total.toFixed(2)}*`;
-              }
-            } catch (error) {
-              console.error("Erro ao buscar vendas mês:", error);
-              responseText =
-                "Desculpe, ocorreu um erro ao buscar as vendas. Por favor, tente novamente mais tarde.";
-            }
-            userStates.set(phoneNumber, { step: "main" });
-            responseText +=
-              "\n---\nDigite qualquer mensagem para voltar ao menu principal.";
           } else {
             // Opção inválida
-            responseText = `Opção inválida. Por favor, escolha:\n\n1. Hoje\n2. Semana\n3. Mês`;
+            responseText = `Opção inválida. Por favor, escolha:\n\n1. Hoje\n2. Últimos 7 dias`;
           }
         }
         // Pergunta se quer filtrar por loja (Top 5)
         else if (userState.step === "vendas_loja") {
           if (messageText === "1") {
-            // Usuário quer filtrar por série
-            userStates.set(phoneNumber, { step: "vendas_serie_input" });
-            responseText = `Digite o número da série/loja:`;
+            // Usuário quer filtrar por série - busca séries disponíveis
+            try {
+              const series = await externalApiService.getSeriesVendas();
+              if (series.length === 0) {
+                responseText = `Nenhuma série disponível no momento.`;
+                userStates.set(phoneNumber, { step: "main" });
+              } else {
+                let seriesText = `📋 *Séries Disponíveis:*\n\n`;
+                series.forEach((s: any, index: number) => {
+                  seriesText += `${index + 1}. ${s.serie} - ${s.Descricao}\n`;
+                });
+                seriesText += `\nDigite o número da opção desejada:`;
+                responseText = seriesText;
+                userStates.set(phoneNumber, { 
+                  step: "vendas_serie_input",
+                  data: { seriesList: series }
+                });
+              }
+            } catch (error) {
+              console.error("Erro ao buscar séries:", error);
+              responseText = "Erro ao buscar séries disponíveis. Tente novamente.";
+              userStates.set(phoneNumber, { step: "main" });
+            }
           } else if (messageText === "2") {
             // Não quer filtrar, vai direto para escolha de período
             userStates.set(phoneNumber, {
@@ -270,17 +307,24 @@ async function startWhatsAppClient(socket: any): Promise<void> {
             });
             responseText = `📊 *Top 5 Vendas*\n\nEscolha o período:\n\n1. Hoje\n2. Ultimos 7 dias\n3. Mês`;
           } else {
-            responseText = `Opção inválida. Por favor, escolha:\n\n1. Sim\n2. Não (todas as lojas)`;
+            responseText = `Opção inválida. Por favor, escolha:\n\n1. Por Loja/Serie\n2. Todas as Lojas`;
           }
         }
         // Input da série
         else if (userState.step === "vendas_serie_input") {
-          const serie = messageText.trim();
-          userStates.set(phoneNumber, {
-            step: "vendas_periodo",
-            data: { serie },
-          });
-          responseText = `📊 *Top 5 Vendas - Série ${serie}*\n\nEscolha o período:\n\n1. Hoje\n2. Ultimos 7 dias\n3. Mês`;
+          const selectedIndex = parseInt(messageText.trim()) - 1;
+          const seriesList = userState.data?.seriesList || [];
+          
+          if (selectedIndex >= 0 && selectedIndex < seriesList.length) {
+            const selectedSerie = seriesList[selectedIndex];
+            userStates.set(phoneNumber, {
+              step: "vendas_periodo",
+              data: { serie: selectedSerie.serie },
+            });
+            responseText = `📊 *Top 5 Vendas - Série ${selectedSerie.serie} (${selectedSerie.Descricao})*\n\nEscolha o período:\n\n1. Hoje\n2. Ultimos 7 dias\n3. Mês`;
+          } else {
+            responseText = `Opção inválida. Por favor, escolha um número entre 1 e ${seriesList.length}.`;
+          }
         }
         // Submenu de Top 5 Vendas
         else if (userState.step === "vendas_periodo") {
@@ -373,13 +417,6 @@ async function startWhatsAppClient(socket: any): Promise<void> {
         }
 
         await message.reply(responseText);
-
-        // Armazena a mensagem recebida
-        await storage.createMessage({
-          phone: phoneNumber,
-          content: message.body,
-          direction: "received",
-        });
 
         // Armazena a resposta enviada
         await storage.createMessage({
