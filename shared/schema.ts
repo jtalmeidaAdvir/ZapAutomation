@@ -47,3 +47,20 @@ export const insertMessageSchema = createInsertSchema(messages).omit({
 
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
 export type Message = typeof messages.$inferSelect;
+
+export const settings = pgTable("settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  username: text("username").notNull(),
+  password: text("password").notNull(),
+  company: text("company").notNull(),
+  instance: text("instance").notNull(),
+  line: text("line").notNull(),
+  grantType: text("grant_type").notNull(),
+});
+
+export const insertSettingsSchema = createInsertSchema(settings).omit({
+  id: true,
+});
+
+export type InsertSettings = z.infer<typeof insertSettingsSchema>;
+export type Settings = typeof settings.$inferSelect;
