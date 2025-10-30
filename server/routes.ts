@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { getStorage } from "./storage";
-import { insertAuthorizedNumberSchema, insertUserSchema } from "@shared/schema";
+import { insertAuthorizedNumberSchema, insertUserSchema, insertSettingsSchema } from "@shared/schema";
 import { initializeWhatsApp } from "./whatsapp";
 import { authMiddleware, generateToken, type AuthRequest } from "./middleware/auth";
 import bcrypt from "bcryptjs";
@@ -160,6 +160,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Erro ao buscar mensagens:", error);
       res.status(500).json({ error: "Erro ao buscar mensagens" });
+    }
+  });
+
+  app.get("/api/settings", authMiddleware, async (req, res) => {
+    try {
+      const storage = await getStorage();
+      const settings = await storage.getSettings();
+      res.json(settings || null);
+    } catch (error) {
+      console.error("Erro ao buscar configurações:", error);
+      res.status(500).json({ error: "Erro ao buscar configurações" });
+    }
+  });
+
+  app.post("/api/settings", authMiddleware, async (req, res) => {
+    try {
+      const result = insertSettingsSchema.safeParse(req.body);
+      
+      if (!result.success) {
+        return res.status(400).json({ error: "Dados inválidos", details: result.error });
+      }
+
+      const storage = await getStorage();
+      const settings = await storage.upsertSettings(result.data);
+      res.json(settings);
+    } catch (error) {
+      console.error("Erro ao salvar configurações:", error);
+      res.status(500).json({ error: "Erro ao salvar configurações" });
     }
   });
 
