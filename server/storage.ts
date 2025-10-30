@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type AuthorizedNumber, type InsertAuthorizedNumber, type Message, type InsertMessage } from "@shared/schema";
+import { type User, type InsertUser, type AuthorizedNumber, type InsertAuthorizedNumber, type Message, type InsertMessage, type Settings, type InsertSettings } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { getPool } from "./db";
 
@@ -14,17 +14,22 @@ export interface IStorage {
   
   getAllMessages(): Promise<Message[]>;
   createMessage(message: InsertMessage): Promise<Message>;
+  
+  getSettings(): Promise<Settings | undefined>;
+  upsertSettings(settings: InsertSettings): Promise<Settings>;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<string, User>;
   private authorizedNumbers: Map<string, AuthorizedNumber>;
   private messages: Map<string, Message>;
+  private settings: Settings | undefined;
 
   constructor() {
     this.users = new Map();
     this.authorizedNumbers = new Map();
     this.messages = new Map();
+    this.settings = undefined;
   }
 
   async getUser(id: string): Promise<User | undefined> {
@@ -84,6 +89,20 @@ export class MemStorage implements IStorage {
     };
     this.messages.set(id, message);
     return message;
+  }
+
+  async getSettings(): Promise<Settings | undefined> {
+    return this.settings;
+  }
+
+  async upsertSettings(insertSettings: InsertSettings): Promise<Settings> {
+    const id = this.settings?.id || randomUUID();
+    const settings: Settings = {
+      ...insertSettings,
+      id,
+    };
+    this.settings = settings;
+    return settings;
   }
 }
 
@@ -203,6 +222,65 @@ export class SqlServerStorage implements IStorage {
       direction: insertMessage.direction,
       timestamp,
     };
+  }
+
+  async getSettings(): Promise<Settings | undefined> {
+    const pool = await getPool();
+    const result = await pool.request()
+      .query('SELECT TOP 1 * FROM settings');
+    
+    if (result.recordset.length === 0) return undefined;
+    
+    const row = result.recordset[0];
+    return {
+      id: row.id,
+      username: row.username,
+      password: row.password,
+      company: row.company,
+      instance: row.instance,
+      line: row.line,
+      grantType: row.grant_type,
+    };
+  }
+
+  async upsertSettings(insertSettings: InsertSettings): Promise<Settings> {
+    const pool = await getPool();
+    const existing = await this.getSettings();
+    
+    if (existing) {
+      await pool.request()
+        .input('id', existing.id)
+        .input('username', insertSettings.username)
+        .input('password', insertSettings.password)
+        .input('company', insertSettings.company)
+        .input('instance', insertSettings.instance)
+        .input('line', insertSettings.line)
+        .input('grant_type', insertSettings.grantType)
+        .query(`UPDATE settings SET username = @username, password = @password, company = @company, 
+                instance = @instance, line = @line, grant_type = @grant_type WHERE id = @id`);
+      
+      return {
+        id: existing.id,
+        ...insertSettings,
+      };
+    } else {
+      const id = randomUUID();
+      await pool.request()
+        .input('id', id)
+        .input('username', insertSettings.username)
+        .input('password', insertSettings.password)
+        .input('company', insertSettings.company)
+        .input('instance', insertSettings.instance)
+        .input('line', insertSettings.line)
+        .input('grant_type', insertSettings.grantType)
+        .query(`INSERT INTO settings (id, username, password, company, instance, line, grant_type) 
+                VALUES (@id, @username, @password, @company, @instance, @line, @grant_type)`);
+      
+      return {
+        id,
+        ...insertSettings,
+      };
+    }
   }
 }
 
